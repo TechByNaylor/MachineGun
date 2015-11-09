@@ -1,0 +1,7 @@
+name = Device
+description = The Core Device Concept For Machine Gun
+package = Machine Gun
+version = 0.0.1
+core = 7.x
+files[] = device.admin.inc
+configure = admin/machine/device

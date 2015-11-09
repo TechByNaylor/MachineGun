@@ -1,0 +1,7 @@
+name = Machine Gun
+description = The primary module for Machine Gun
+package = Machine Gun
+version = 0.0.1
+core = 7.x
+files[] = machinegun.admin.inc
+configure = admin/machine/config

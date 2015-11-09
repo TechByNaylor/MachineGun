@@ -1,0 +1,22 @@
+<?php
+
+function turret_init () {
+
+}
+
+function turret_menu () {
+
+    $items = [];
+
+    $items['admin/machine/turret'] = [
+        'title'            => 'Turret',
+        'description'      => 'Configure Machine Gun Turrets',
+        'page callback'    => 'turret_admin_form',
+        'page arguments'   => [],
+        'access arguments' => ['administer devices'],
+        'file'             => 'turret.admin.inc'
+    ];
+
+    return $items;
+
+}

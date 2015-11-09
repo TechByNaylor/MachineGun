@@ -1,0 +1,22 @@
+<?php
+
+function machinegun_init () {
+
+}
+
+function machinegun_menu () {
+
+    $items = [];
+
+    $items['admin/machine/config'] = [
+        'title'            => 'Machine Gun',
+        'description'      => 'Configure Machine Gun',
+        'page callback'    => 'machinegun_admin_form',
+        'page arguments'   => [],
+        'access arguments' => ['administer devices'],
+        'file'             => 'machinegun.admin.inc'
+    ];
+
+    return $items;
+
+}

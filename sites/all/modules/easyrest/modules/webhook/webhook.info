@@ -1,0 +1,7 @@
+name = Webhook
+description = Manage Webhooks
+package = EasyRest
+version = 0.0.1
+core = 7.x
+files[] = webhook.admin.inc
+configure = admin/webhook/config

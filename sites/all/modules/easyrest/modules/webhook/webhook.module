@@ -1,0 +1,32 @@
+<?php
+
+function webhook_init () {
+
+    easyrest_init([
+        'hook_name' => 'webhooks'
+    ]);
+
+}
+
+function webhook_menu () {
+
+    $items = [];
+
+    $items['admin/webhook/config'] = [
+        'title'            => 'Webhook Config',
+        'description'      => 'Configure Webhooks',
+        'page callback'    => 'drupal_get_form',
+        'page arguments'   => ['webhook_admin_form'],
+        'access arguments' => ['administer webhooks'],
+        'file'             => 'webhook.admin.inc'
+    ];
+
+    return $items;
+
+}
+
+function webhook_webhooks () {
+
+    return ['test' => 'test'];
+
+}

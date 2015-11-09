@@ -1,0 +1,74 @@
+<?php
+
+function easyrest_menu () {
+
+    $items = [];
+
+    $items['admin/easyrest/config'] = [
+        'title'            => 'EasyRest Module Config',
+        'description'      => 'Configure EasyRest Module Endpoints',
+        'page callback'    => 'drupal_get_form',
+        'page arguments'   => ['easyrest_admin_form'],
+        'access arguments' => ['administer rest endpoints'],
+        'file'             => 'easyrest.admin.inc'
+    ];
+
+    return $items;
+
+}
+
+function easyrest_init ($options = []) {
+
+    $hook_name = isset($options['hook_name']) ? $options['hook_name'] : 'endpoints';
+
+    //get all endpoints defined by the endpoints hook
+    $routes = module_invoke_all($hook_name);
+
+    //compare current url to the routes array, to determine if we've got a match
+    $currentUrl = '/'.explode('?', $_GET['q'])[0];
+
+    //collect parameters (we don't really care if they come from get or post, we'll set a flag.
+    $params = [$_GET+$_POST];
+
+    if (!empty($routes) && !empty($routes[$currentUrl])) {
+
+        $response = ['Unhandled Request Condition']; //the default response if we can't figure out what to do with this request.
+
+        $endpoint_enabled = variable_get("easyrest_endpoint_{$currentUrl}_enabled", true);
+
+        $route_access_arguments = !empty($routes[$currentUrl]['access arguments']) ? $routes[$currentUrl]['access arguments'] : [];
+
+        if (!$endpoint_enabled) {
+
+            $response = [
+                'error' => 'Permission Denied',
+                'message' => "This endpoint has been disabled by a site administrator, and will no longer be serving data through this domain."
+            ];
+
+        } else if (!user_access($route_access_arguments[0], $route_access_arguments[1])) {
+
+            $response = [
+                'error' => 'Permission Denied',
+                'message' => "The user accessing this resource does not have the appropriate access level to complete the operation [{$route_access_arguments[0]}]. Access has been denied."
+            ];
+
+        } else {
+
+            $route            = $routes[$currentUrl];
+            $routeHandlerName = $route['handler'];
+
+            if (function_exists($routeHandlerName)) {
+
+                $response = call_user_func_array($routeHandlerName, $params);
+
+            }
+
+        }
+
+        drupal_json_output($response);
+        drupal_exit();
+
+    }
+
+}
+

@@ -1,0 +1,118 @@
+<?php
+
+function github_menu () {
+
+    $items = [];
+
+    $items['admin/github/config'] = [
+        'title'            => 'Github Module Config',
+        'description'      => 'Configure Github Module',
+        'page callback'    => 'drupal_get_form',
+        'page arguments'   => ['github_admin_form'],
+        'access arguments' => ['administer version control'],
+        'file'             => 'github.admin.inc'
+    ];
+
+    $items['admin/github/pull'] = [
+        'title'            => 'Github Repo Pull',
+        'description'      => 'Pull Latest Github Repositroy From Master Branch',
+        'page callback'    => 'github_pull',
+        'access arguments' => ['administer version control']
+    ];
+
+    $items['admin/github/info'] = [
+        'title'            => 'Github Repository Information',
+        'description'      => 'Reports a variety of useful information about the repository this project is currently a part of.',
+        'page callback'    => 'github_get_info',
+        'access arguments' => ['administer version control']
+    ];
+
+    return $items;
+
+}
+
+function github_webhook_on_push ($params) {
+
+    return [
+        'status' => 'OK'
+    ];
+
+}
+
+function github_get_info () {
+
+    if (!github_project_is_version_controlled()) return 'This Project Is Not Version Controlled.';
+
+    $info    = [];
+
+    $version = [];
+    $branch  = '';
+
+    exec('git describe --always',     $version_mini_hash);
+    exec('git rev-list HEAD | wc -l', $version_number);
+    exec('git log -1',$line);
+    $version['short'] = "v1.".trim($version_number[0]).".".$version_mini_hash[0];
+    $version['full']  = "v1.".trim($version_number[0]).".$version_mini_hash[0] (".str_replace('commit ','',$line[0]).")";
+
+    $info['version'] = $version;
+    $info['branch']  = $branch;
+
+    return json_encode($info);
+
+}
+
+function github_pull () {
+
+    $repoUrl       = variable_get('github_repo_url');
+    $adminUsername = variable_get('github_admin_username');
+    $adminPassword = variable_get('github_admin_password');
+
+    if (empty($repoUrl) || empty($adminUsername) || empty($adminPassword)) {
+        return 'You Must Provide repository url, username, and password in your <a href="/admin/github/config">Github Configuration Form</a>';
+    }
+
+    function execPrint($command) {
+        $result = [];
+        $return = 0;
+
+        exec($command, $result, $return);
+
+        foreach ($result as $line) {
+            print($line . "\n");
+        }
+    }
+// Print the exec output inside of a pre element
+    return "<pre>" . execPrint("git pull https://{$adminUsername}:{$adminPassword}@{$repoUrl} master") . "</pre>";
+
+
+}
+
+function github_webhooks() {
+
+    $webhooks = [];
+
+    $webhooks['webhook/github/push'] = [
+        'description'      => 'Handles Git Push Event',
+        'access arguments' => ['administer version control'],
+        'handler'          => 'github_webhook_on_push'
+    ];
+
+    return $webhooks;
+
+}
+
+function github_project_is_version_controlled () {
+
+    $branch = null;
+
+    $shellOutput = [];
+    exec('git branch | ' . "grep ' * '", $shellOutput);
+    foreach ($shellOutput as $line) {
+        if (strpos($line, '* ') !== false) {
+            $branch = trim(strtolower(str_replace('* ', '', $line)));
+        }
+    }
+
+    return $branch ? true : false;
+
+}

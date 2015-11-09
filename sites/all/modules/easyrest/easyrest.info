@@ -1,0 +1,7 @@
+name = EasyRest
+description = Adds restful functionality to Drupal site
+core = 7.x
+package = EasyRest
+version = 7.x-0.1
+files[] = easyrest.admin.inc
+configure = admin/easyrest/config

@@ -1,0 +1,64 @@
+<?php
+
+function device_init () {
+
+    $debug = 'stop';
+
+}
+
+function device_menu () {
+
+    $items = [];
+
+    $items['admin/machine/device'] = [
+        'title' => 'Device',
+        'description' => 'Configure Machine Gun Devices',
+        'page callback' => 'device_admin_form',
+        'page arguments' => [],
+        'access arguments' => ['administer devices'],
+        'file' => 'device.admin.inc'
+    ];
+
+    return $items;
+
+}
+
+function device_scan ($filters) {
+    //scan network for devices
+
+}
+
+function device_add ($deviceId) {
+    //add a found device to our system
+
+}
+
+function device_remove ($deviceId) {
+    //remove a device from our system
+
+}
+
+function device_edit ($deviceId) {
+    //edit a device on our system
+
+}
+
+function device_connect ($deviceId) {
+    //connect to a device, and queue jobs
+
+}
+
+function device_disconnect ($deviceId) {
+    //disconnect from a previously connected device
+
+}
+
+function device_test ($deviceId) {
+    //test a device
+
+}
+
+function device_status ($deviceId) {
+    //get status of a connected device
+
+}

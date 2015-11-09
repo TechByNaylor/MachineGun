@@ -1,0 +1,7 @@
+name = Turret
+description = Manage Turrets
+package = Machine Gun
+version = 0.0.1
+core = 7.x
+files[] = turret.admin.inc
+configure = admin/machine/turret

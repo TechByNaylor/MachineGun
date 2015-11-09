@@ -1,0 +1,7 @@
+name = Github
+description = Github functionality
+package = Github
+version = 0.0.1
+core = 7.x
+files[] = github.admin.inc
+configure = admin/github/config
