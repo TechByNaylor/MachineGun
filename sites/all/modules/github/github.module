@@ -13,13 +13,6 @@ function github_menu () {
         'file'             => 'github.admin.inc'
     ];
 
-    $items['admin/github/pull'] = [
-        'title'            => 'Github Repo Pull',
-        'description'      => 'Pull Latest Github Repositroy From Master Branch',
-        'page callback'    => 'github_pull',
-        'access arguments' => ['administer version control']
-    ];
-
     $items['admin/github/info'] = [
         'title'            => 'Github Repository Information',
         'description'      => 'Reports a variety of useful information about the repository this project is currently a part of.',
@@ -33,10 +26,9 @@ function github_menu () {
 
 function github_webhook_on_push ($params) {
 
-    $params = !empty($params) ? json_decode($params) : [];
+    //$params = !empty($params) ? json_decode($params) : [];
 
-
-    nodejs_broadcast_message('Github Module', 'Push '.$params['after']);
+    nodejs_broadcast_message('Github Module', $params);
 
     $response = ['status' => 'OK'];
 
