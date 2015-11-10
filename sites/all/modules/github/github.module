@@ -33,6 +33,8 @@ function github_menu () {
 
 function github_webhook_on_push ($params) {
 
+    nodejs_broadcast_message('Github Module', 'Push'.json_encode($params));
+
     return [
         'status' => 'OK'
     ];
