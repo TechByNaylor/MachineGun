@@ -32,7 +32,7 @@ function github_menu () {
 }
 
 function github_webhook_on_push ($params) {
-    //test push
+
     nodejs_broadcast_message('Github Module', 'Push'.json_encode($params));
 
     return [
