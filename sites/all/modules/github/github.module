@@ -35,13 +35,16 @@ function github_webhook_on_push ($params) {
 
     $params = !empty($params) ? json_decode($params) : [];
 
-    $response = github_pull();
 
     nodejs_broadcast_message('Github Module', 'Push '.$params['after']);
 
-    return [
-        'status' => 'OK'
-    ];
+    $response = ['status' => 'OK'];
+
+    if (variable_get('github_auto_pull', false)) {
+        $response = github_pull();
+    }
+
+    return $response;
 
 }
 
@@ -74,21 +77,20 @@ function github_pull ($options = []) {
     $adminPassword = variable_get('github_admin_password');
 
     if (empty($repoUrl) || empty($adminUsername) || empty($adminPassword)) {
+
         return 'You Must Provide repository url, username, and password in your <a href="/admin/github/config">Github Configuration Form</a>';
+
     }
 
-    function execPrint($command) {
-        $result = [];
-        $return = 0;
+    $result = [];
+    $return = 0;
 
-        exec($command, $result, $return);
+    $repoUrlTokens = explode('://', $repoUrl);
+    $modifiedRepoUrl = $repoUrlTokens[0].'://'."{$adminUsername}:{$adminPassword}@".$repoUrlTokens[1];
 
-        foreach ($result as $line) {
-            print($line . "\n");
-        }
-    }
-// Print the exec output inside of a pre element
-    return "<pre>" . execPrint("git pull https://{$adminUsername}:{$adminPassword}@{$repoUrl} master") . "</pre>";
+    exec("git pull {$modifiedRepoUrl} master 2>&1", $result, $return);
+
+    return $result;
 
 }
 
