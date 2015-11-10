@@ -95,7 +95,7 @@ function github_webhooks() {
 
     $webhooks['/webhook/github/push'] = [
         'description'      => 'Handles Git Push Event',
-        'access arguments' => ['administer version control'],
+        'access arguments' => ['access content'],
         'handler'          => 'github_webhook_on_push'
     ];
 
