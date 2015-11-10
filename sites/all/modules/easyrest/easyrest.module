@@ -22,7 +22,7 @@ function easyrest_init ($options = []) {
     $hook_name = isset($options['hook_name']) ? $options['hook_name'] : 'endpoints';
 
     //get all endpoints defined by the endpoints hook
-    $routes = module_invoke_all($hook_name);
+    $routes = _easyrest_module_invoke_all($hook_name);
 
     //compare current url to the routes array, to determine if we've got a match
     $currentUrl = '/'.explode('?', $_GET['q'])[0];
@@ -55,7 +55,12 @@ function easyrest_init ($options = []) {
         } else {
 
             $route            = $routes[$currentUrl];
+            $api_file         = empty($routes[$currentUrl]['file']) ? null : $routes[$currentUrl]['file'];
+            $module_name      = empty($routes[$currentUrl]['module_name']) ? 'easyrest' : $routes[$currentUrl]['module_name'];
             $routeHandlerName = $route['handler'];
+
+            //specify a filename relative to your module path to include functions defined external to the module file -- {module}.api.inc recommended
+            if ($api_file) require_once(realpath('.').'/'.drupal_get_path('module',$module_name).'/'.trim($api_file,'/'));
 
             if (function_exists($routeHandlerName)) {
 
@@ -72,3 +77,45 @@ function easyrest_init ($options = []) {
 
 }
 
+/**
+ * Invokes a hook in all enabled modules that implement it.
+ *
+ * All arguments are passed by value. Use drupal_alter() if you need to pass
+ * arguments by reference.
+ *
+ * @param $hook
+ *   The name of the hook to invoke.
+ * @param ...
+ *   Arguments to pass to the hook.
+ *
+ * @return
+ *   An array of return values of the hook implementations. If modules return
+ *   arrays from their implementations, those are merged into one array.
+ *
+ * @see drupal_alter()
+ */
+function _easyrest_module_invoke_all($hook) {
+    $args = func_get_args();
+    // Remove $hook from the arguments.
+    unset($args[0]);
+    $return = array();
+    foreach (module_implements($hook) as $module) {
+        $function = $module . '_' . $hook;
+        if (function_exists($function)) {
+            $result = call_user_func_array($function, $args);
+            if (isset($result) && is_array($result)) {
+
+                foreach($result as $entry_key => $entry_value) {
+                    $result[$entry_key]['module_name'] = $module;
+                }
+
+                $return = array_merge_recursive($return, $result);
+            }
+            elseif (isset($result)) {
+                $return[] = $result;
+            }
+        }
+    }
+
+    return $return;
+}

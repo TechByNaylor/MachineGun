@@ -20,3 +20,76 @@ function turret_menu () {
     return $items;
 
 }
+
+function turret_endpoints () {
+    $endpoints = [];
+
+    $endpoints['/v1/rest/turret/register'] = [
+        'description'      => 'A turret touches this endpoint to register itself with Machine Gun.',
+        'access arguments' => ['access content'],//@todo: create a turret access param
+        'handler'          => 'turret_register_endpoint',
+        'file'             => 'turret.api.inc'
+    ];
+
+    $endpoints['/v1/rest/turret/claim'] = [
+        'description'      => 'A turret may be claimed by a logged in user by its turret_id',
+        'access arguments' => ['access content'],//@todo: create a turret access param
+        'handler'          => 'turret_claim_endpoint',
+        'file'             => 'turret.api.inc'
+    ];
+
+    $endpoints['/v1/rest/turret/release'] = [
+        'description'      => 'A user may release a previously claimed turret by turret_id.',
+        'access arguments' => ['access content'],//@todo: create a turret access param
+        'handler'          => 'turret_release_endpoint',
+        'file'             => 'turret.api.inc'
+    ];
+
+    $endpoints['/v1/rest/turret/config-form'] = [
+        'description'      => 'Get a turret\'s configuration form',
+        'access arguments' => ['access content'],//@todo: create a turret access param
+        'handler'          => 'turret_config_form_endpoint',
+        'file'             => 'turret.api.inc'
+    ];
+
+    $endpoints['/v1/rest/turret/configure'] = [
+        'description'      => 'Push values here to configure your turret, the config-form should have given you all the key value pairs this turret understands.',
+        'access arguments' => ['access content'],//@todo: create a turret access param
+        'handler'          => 'turret_configure_endpoint',
+        'file'             => 'turret.api.inc'
+    ];
+
+    $endpoints['/v1/rest/turret/status'] = [
+        'description'      => 'Queries a turret for it\'s current status object.',
+        'access arguments' => ['access content'],//@todo: create a turret access param
+        'handler'          => 'turret_status_endpoint',
+        'file'             => 'turret.api.inc'
+    ];
+
+    $endpoints['/v1/rest/turret/connect'] = [
+        'description'      => 'A turret touches this endpoint when it is available and active.',
+        'access arguments' => ['access content'],//@todo: create a turret access param
+        'handler'          => 'turret_connect_endpoint',
+        'file'             => 'turret.api.inc'
+    ];
+
+    $endpoints['/v1/rest/turret/disconnect'] = [
+        'description'      => 'A turret touches this endpoint when it is no longer available (likely shutting down)',
+        'access arguments' => ['access content'],//@todo: create a turret access param
+        'handler'          => 'turret_disconnect_endpoint',
+        'file'             => 'turret.api.inc'
+    ];
+
+    return $endpoints;
+
+}
+
+function turret_emit_message ($params) {
+    //send a turret a message
+    //we'll be generating socket.io communications here
+}
+
+function turret_on_message ($param) {
+    //all in-bound turret communication should go through this endpoint
+    //this will be handled as a socket.io callback
+}
