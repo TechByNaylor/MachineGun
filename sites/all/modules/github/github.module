@@ -33,7 +33,11 @@ function github_menu () {
 
 function github_webhook_on_push ($params) {
 
-    nodejs_broadcast_message('Github Module', 'Push'.json_encode($params));
+    $params = !empty($params) ? json_decode($params) : [];
+
+    $response = github_pull();
+
+    nodejs_broadcast_message('Github Module', 'Push '.$params['after']);
 
     return [
         'status' => 'OK'
@@ -63,7 +67,7 @@ function github_get_info () {
 
 }
 
-function github_pull () {
+function github_pull ($options = []) {
 
     $repoUrl       = variable_get('github_repo_url');
     $adminUsername = variable_get('github_admin_username');
@@ -85,7 +89,6 @@ function github_pull () {
     }
 // Print the exec output inside of a pre element
     return "<pre>" . execPrint("git pull https://{$adminUsername}:{$adminPassword}@{$repoUrl} master") . "</pre>";
-
 
 }
 
