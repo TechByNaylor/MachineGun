@@ -24,9 +24,3 @@ function webhook_menu () {
     return $items;
 
 }
-
-function webhook_webhooks () {
-
-    return ['test' => 'test'];
-
-}
