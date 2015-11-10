@@ -35,6 +35,8 @@ function github_webhook_on_push ($params) {
 
     nodejs_broadcast_message('Github Module', 'Push'.json_encode($params));
 
+    //test
+
     return [
         'status' => 'OK'
     ];
@@ -93,7 +95,7 @@ function github_webhooks() {
 
     $webhooks = [];
 
-    $webhooks['webhook/github/push'] = [
+    $webhooks['/webhook/github/push'] = [
         'description'      => 'Handles Git Push Event',
         'access arguments' => ['administer version control'],
         'handler'          => 'github_webhook_on_push'
