@@ -1,0 +1,27 @@
+<?php
+
+function network_trace_route ($ip) {
+    $unix      =  1;
+    $windows   =  0;
+
+    $register_globals = (bool) ini_get('register_gobals');
+    $system = ini_get('system');
+    $unix = (bool) $unix;
+    $win  = (bool) $windows;
+
+    $results = '';
+
+    if ($unix) {
+
+        $results = system ("traceroute $ip");
+        system("killall -q traceroute");// kill all traceroute processes in case there are some stalled ones or use echo 'traceroute' to execute without shell
+
+    } elseif ($windows) {
+
+        $results = system("tracert $ip");
+
+    }
+
+    return $results;
+
+}

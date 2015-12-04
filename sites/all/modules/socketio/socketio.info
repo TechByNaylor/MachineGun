@@ -1,0 +1,5 @@
+name = Socket.io Integration
+description = Adds Socket.io support to Drupal
+package = Socket.io
+version = VERSION
+core = 7.x

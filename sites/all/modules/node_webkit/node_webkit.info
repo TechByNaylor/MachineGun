@@ -1,0 +1,5 @@
+name = Node Webkit
+description = Adds node webkit app functionality to Drupal site
+core = 7.x
+package = Nodejs
+version = 7.x-0.1

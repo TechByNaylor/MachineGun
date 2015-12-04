@@ -1,0 +1,7 @@
+name = eBay
+description = eBay functionality
+package = eBay
+version = 0.0.1
+core = 7.x
+files[] = ebay.admin.inc
+configure = admin/ebay/config

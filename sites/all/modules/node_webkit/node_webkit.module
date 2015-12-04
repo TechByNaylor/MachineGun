@@ -1,0 +1,55 @@
+<?php
+
+function  node_webkit_page_alter (&$page) {
+    global $user;
+
+    $nodes = !empty($page['content']['system_main']['nodes']) ? $page['content']['system_main']['nodes'] : [];
+
+    $node_enabled = false;
+
+    $module_path = drupal_get_path('module', 'node_webkit');
+
+    foreach ($nodes as $node_wrapper) {
+        $node = $node_wrapper['#node'];
+
+        if (empty($node)) continue;
+
+        $type = $node->type;
+
+        if ($type == 'node_webkit_app') {
+
+            if ($node->field_node_enabled[LANGUAGE_NONE][0]['value']) {
+                $node_enabled = true;
+            }
+
+            //there is no drupal admin-level control on this app, sorry!
+            if (!empty($page['page_top']) && !empty($page['page_top']['toolbar']) ) {
+
+                unset($page['page_top']['toolbar']);
+
+            }
+
+        }
+
+    }
+
+    //throw in the node webkit api, so we've got something to reference while we're building our super awesome really cool system level web applications with node-webkit! =)
+    if ($node_enabled) {
+
+
+        drupal_add_js($module_path.'/js/lib/node-webkit.api.js');
+
+        drupal_add_js($module_path.'/js/lib/app.api.js');
+
+        $setting = [
+            'user' => [
+                'name'    => $user->name,
+                'profile' => isset($user->profile) ? $user->profile : []
+            ]
+        ];
+
+        drupal_add_js($setting, 'setting');
+
+    }
+
+}

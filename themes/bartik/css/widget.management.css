@@ -1,0 +1,33 @@
+body, .management-page-wrapper, .management-page, .management-main-wrapper, .management-main, .management-content {
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: red;
+    overflow: hidden;
+}
+
+.device-section {
+    background-color: blue;
+    position: absolute;
+    top: 30px;
+    left: 0;
+    bottom: 0;
+    width: 250px;
+}
+
+.workspace-section {
+    background-color: yellow;
+    position: absolute;
+    top: 30px;
+    left: 250px;
+    bottom: 0;
+    right: 0;
+}
+
+.workspace-main {
+
+}

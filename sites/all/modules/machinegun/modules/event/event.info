@@ -1,0 +1,5 @@
+name = Event
+description = Adds an event concept to machine gun
+core = 7.x
+package = Machine Gun
+version = 7.x-0.1

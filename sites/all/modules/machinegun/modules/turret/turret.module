@@ -84,12 +84,69 @@ function turret_endpoints () {
 
 }
 
-function turret_emit_message ($params) {
-    //send a turret a message
-    //we'll be generating socket.io communications here
+/**
+ * Implements hook_events
+ */
+function turret_events () {
+
+    $events = [];
+
+    $events['connect'] = [
+        'source' => 'turret:*',
+        'callback' => 'turret_on_connect_event'
+    ];
+
+    $events['disconnect'] = [
+        'source' => 'turret:*',
+        'callback' => 'turret_on_disconnect_event'
+    ];
+
+    $events['authenticate'] = [
+        'source' => 'turret:*',
+        'callback' => 'turret_on_authenticate_event'
+    ];
+
+    $events['status'] = [
+        'source' => 'turret:*',
+        'callback' => 'turret_on_status_event'
+    ];
+
+    $events['message'] = [
+        'source' => 'turret:*',
+        'callback' => 'turret_on_message_event'
+    ];
+
+    $events['timeout'] = [
+        'source' => 'turret:*',
+        'callback' => 'turret_on_timeout_event'
+    ];
+
+    return $events;
+
 }
 
-function turret_on_message ($param) {
+function turret_on_connect_event (&$event) {
+    //when a turret connects to machine gun
+
+    $event['data']['key2'] = 'value2';
+
+}
+
+function turret_on_disconnect_event (&$event) {
+    //when a turret disconnects from machine gun
+
+}
+
+function turret_on_authenticate_event (&$event) {
+    //when a turret tries to authenticate
+}
+
+function turret_on_status_event (&$event) {
+
+}
+
+function turret_on_message_event (&$param) {
     //all in-bound turret communication should go through this endpoint
     //this will be handled as a socket.io callback
+
 }

@@ -1,0 +1,104 @@
+<?php
+
+//the event module provides us simply with a way to emit and catch normalized events throughout our module system
+
+//Implements hook_endpoints to expose event creation as a rest endpoint
+function event_endpoints () {
+
+    $endpoints = [];
+
+    $endpoints['/v1/rest/event/create'] = [
+        'description'      => 'Allows external processes to emit events into our system via a rest call.',
+        'access arguments' => ['access content'],//@todo: create a turret access param
+        'handler'          => 'event_create_endpoint'
+    ];
+
+    return $endpoints;
+
+}
+
+function event_create_endpoint ($params) {
+
+    $event_id     = $params['id'];
+    $event_target = !empty($params['target']) ? json_decode($params['target']) : [];
+    $event_data   = !empty($params['data'])   ? (array) json_decode($params['data']) : [];
+
+    return event_create($event_id, $event_target, $event_data);
+
+}
+
+function event_create ($event_id = 'error', $event_target = [], $event_data = []) {
+    //create an event from provided parameters, then emit it into our system.
+
+    global $user;
+
+    $event = [
+        'id'     => $event_id,
+        'source' => $user->uid,
+        'target' => $event_target,
+        'data'   => $event_data
+    ];
+
+    return event_emit($event);
+
+}
+
+function event_emit (&$event = []) {
+
+    $event_id = $event['id'];
+
+    $events = module_invoke_all('events');
+
+    if (!empty($events[$event['id']])) {
+
+        //call all the defined event handlers and what not, query against target, etc...
+        if (!empty($events[$event_id]['callback']) && !is_array($events[$event_id]['callback'])) {
+            $events[$event_id]['callback'] = [$events[$event_id]['callback']];
+        }
+
+        foreach($events[$event_id]['callback'] as $callback) {
+
+            if (function_exists($callback)) {
+
+                //in this case $event should have been modified by the event handler, and that's what we use as the return value at the end of this function call.
+                call_user_func_array($callback, [&$event]);
+
+            }
+
+        }
+
+
+    } else {
+
+        //no handlers defined add errors to this event...
+
+        $event['errors'][] = event_create('error', null, ['event' => $event, 'message' => 'No Handlers Defined For This Event']);
+
+    }
+
+    return $event;
+
+}
+
+//Implements hook_events
+function event_events () {
+
+    $events = [];
+
+    $events['error'] = [
+        'callback' => 'event_on_error_event'
+
+    ];
+
+    return $events;
+
+}
+
+function event_on_error_event (&$event) {
+
+    //we got an error event, now what?
+
+    //just return it, this might be a good place to log errors in our event system though.
+    return $event;
+
+}

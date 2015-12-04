@@ -1,0 +1,39 @@
+<?php
+
+module_load_include('inc', 'nanosoap');
+
+function ebay_menu () {
+
+    $items = [];
+
+    $items['admin/ebay/config'] = [
+        'title'            => 'eBay Module Config',
+        'description'      => 'Configure eBay Module',
+        'page callback'    => 'drupal_get_form',
+        'page arguments'   => ['ebay_admin_form'],
+        'access arguments' => ['administer commerce'],
+        'file'             => 'ebay.admin.inc'
+    ];
+
+    $items['admin/ebay/info'] = [
+        'title'            => 'eBay Account Information',
+        'description'      => 'Reports a variety of useful information about the eBay seller account.',
+        'page callback'    => 'ebay_get_account',
+        'access arguments' => ['administer commerce']
+    ];
+
+    return $items;
+
+}
+
+function ebay_get_account () {
+
+    $client = new NanoSOAPClient('http://opensearch.addi.dk/1.1/');
+    $response = $client->call('getObjectRequest', array(
+        'identifier' => '710100:27246478',
+        'objectFormat' => 'dkabm',
+    ));
+
+    return $response;
+
+}

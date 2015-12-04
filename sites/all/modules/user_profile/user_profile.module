@@ -1,0 +1,92 @@
+<?php
+
+//use some user module hooks to add, edit, view, and delete user profile fields..
+//for now, we're only going to support
+
+function user_profile_gateway_mac () {
+
+    return 'Not Yet Implemented';
+
+}
+
+function user_profile_gateway_ip () {
+
+    return 'Not Yet Implemented';
+
+}
+
+function user_profile_device_list () {
+
+    return 'Not Yet Implemented';
+
+}
+
+function user_profile_user_cancel () {
+
+}//	Act on user account cancellations.
+
+function user_profile_user_cancel_methods_alter	() {
+
+}//Modify account cancellation methods.
+
+function user_profile_user_categories () {
+
+}//	Define a list of user settings or profile information categories.
+
+function user_profile_user_delete () {
+
+}//	Respond to user deletion.
+
+function user_profile_user_insert () {
+
+    //make sure we've got all the machinegun user profile fields we need associated with this user
+
+}//	A user account was created.
+
+function user_profile_user_load () {
+
+}//	Act on user objects when loaded from the database.
+
+function user_profile_user_login () {
+
+}//	The user just logged in.
+
+function user_profile_user_logout () {
+
+}//	The user just logged out.
+
+function user_profile_user_operations () {
+
+}//	Add mass user operations.
+
+function user_profile_user_presave () {
+
+}//	A user account is about to be created or updated.
+
+function user_profile_user_role_delete () {
+
+}//	Respond to user role deletion.
+
+function user_profile_user_role_insert () {
+
+}//	Respond to creation of a new user role.
+
+function user_profile_user_role_presave () {
+
+}//	Act on a user role being inserted or updated.
+
+function user_profile_user_role_update () {
+
+}//	Respond to updates to a user role.
+
+function user_profile_user_update () {
+
+}//	A user account was updated.
+
+function user_profile_user_view () {
+
+}//	The user's account information is being displayed.
+
+function user_profile_user_view_alter () {
+
+}//	The user was built; the module may modify the structured content.

@@ -3,6 +3,7 @@
 
 Drupal.Nodejs.callbacks.nodejsNotify = {
   callback: function (message) {
+      return;
     var notifyTime = Drupal.settings.nodejs_notify.notification_time;
     if (notifyTime > 0) {
       $.jGrowl(message.data.body, {header: message.data.subject, life:(notifyTime * 1000)});

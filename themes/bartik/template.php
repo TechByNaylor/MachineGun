@@ -1,5 +1,15 @@
 <?php
 
+function bartik_preprocess_page (&$variables, &$hook) {
+
+    if (isset($variables['node']->type)) {
+
+        $variables['theme_hook_suggestions'][] = 'page__' . $variables['node']->type;
+
+    }
+
+}
+
 /**
  * Add body classes if certain regions have content.
  */
@@ -109,9 +119,19 @@ function bartik_process_maintenance_page(&$variables) {
  * Override or insert variables into the node template.
  */
 function bartik_preprocess_node(&$variables) {
-  if ($variables['view_mode'] == 'full' && node_is_page($variables['node'])) {
-    $variables['classes_array'][] = 'node-full';
-  }
+
+    if ($variables['view_mode'] == 'full' && node_is_page($variables['node'])) {
+
+        $variables['classes_array'][] = 'node-full';
+
+    }
+
+    if (isset($variables['node']->type)) {
+
+        $variables['theme_hook_suggestions'][] = 'node__' . $variables['node']->type;
+
+    }
+
 }
 
 /**
@@ -129,28 +149,4 @@ function bartik_preprocess_block(&$variables) {
  */
 function bartik_menu_tree($variables) {
   return '<ul class="menu clearfix">' . $variables['tree'] . '</ul>';
-}
-
-/**
- * Implements theme_field__field_type().
- */
-function bartik_field__taxonomy_term_reference($variables) {
-  $output = '';
-
-  // Render the label, if it's not hidden.
-  if (!$variables['label_hidden']) {
-    $output .= '<h3 class="field-label">' . $variables['label'] . ': </h3>';
-  }
-
-  // Render the items.
-  $output .= ($variables['element']['#label_display'] == 'inline') ? '<ul class="links inline">' : '<ul class="links">';
-  foreach ($variables['items'] as $delta => $item) {
-    $output .= '<li class="taxonomy-term-reference-' . $delta . '"' . $variables['item_attributes'][$delta] . '>' . drupal_render($item) . '</li>';
-  }
-  $output .= '</ul>';
-
-  // Render the top-level DIV.
-  $output = '<div class="' . $variables['classes'] . (!in_array('clearfix', $variables['classes_array']) ? ' clearfix' : '') . '"' . $variables['attributes'] .'>' . $output . '</div>';
-
-  return $output;
 }

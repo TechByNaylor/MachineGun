@@ -19,9 +19,79 @@ function device_menu () {
         'file' => 'device.admin.inc'
     ];
 
+    $items['manage/devices/settings_submit'] = [
+        'title' => 'Submit Device Settings',
+        'description' => 'Use this to submit device settings forms.',
+        'page callback' => 'device_settings_form_submit',
+        'page arguments' => [],
+        'access arguments' => ['administer devices']
+    ];
+
     return $items;
 
 }
+
+function device_socket_events () {
+
+    $events = [];
+
+    $events['connect'] = [
+        'event handler' => 'device_on_connect'
+    ];
+
+    $events['error'] = [
+        'event handler' => 'device_on_error'
+    ];
+
+    $events['register'] = [
+        'event handler' => 'device_on_register'
+    ];
+
+    $events['forms'] = [
+        'event handler' => 'device_on_forms'
+    ];
+
+    $events['status'] = [
+        'event handler' => 'device_on_status'
+    ];
+
+    return $events;
+
+}
+
+//~~~
+
+function device_on_connect ($device, $data) {
+
+    $debug = true;
+
+}
+
+function device_on_error ($device, $data) {
+
+    $debug = true;
+
+}
+
+function device_on_register ($device, $data) {
+
+    $debug = true;
+
+}
+
+function device_on_forms ($device, $data) {
+
+    $debug = true;
+
+}
+
+function device_on_status ($device, $data) {
+
+    $debug = true;
+
+}
+
+//~~~
 
 function device_scan ($filters) {
     //scan network for devices
@@ -60,5 +130,119 @@ function device_test ($deviceId) {
 
 function device_status ($deviceId) {
     //get status of a connected device
+
+}
+
+function device_query ($options) {
+
+    $include_offline_devices = !empty($options['include_offline_devices']) ? $options['include_offline_devices'] : false;
+
+    unset($options['include_offline_devices']);
+
+
+    $query = new EntityFieldQuery;
+
+    $query->entityCondition('entity_type', 'node')
+          ->entityCondition('bundle', 'device');
+
+    try {
+
+        foreach($options as $field_name => $field_value) {
+
+            $query->fieldCondition($field_name, 'value', $field_value);
+
+        }
+
+    } catch (Exception $exception) {
+
+        return [
+            'error'   => $exception,
+            'message' => 'Error trying to query devices on one or more field values.'
+        ];
+
+    }
+
+    //we default to excluding offline devices, but a developer may override that default, if he really wants to.
+    if (!$include_offline_devices) {
+
+        $query->fieldCondition('field_status', 'value', 0, '>');
+
+    }
+
+    $results = $query->execute();
+
+    $nodes = !empty($results['node']) ? node_load_multiple(array_keys($results['node'])) : [];
+
+    return $nodes;
+
+}
+
+function device_preprocess_page (&$vars) {
+    global $user;
+
+    $module_path = drupal_get_path('module', 'device');
+
+    if (empty($vars['node'])) return;
+
+    $node = $vars['node'];
+
+    switch ($node->type) {
+
+        case 'management_page':
+
+            if ($node->field_manage_device_pairing) {
+
+                drupal_add_js('/sites/all/libraries/remodal/remodal.js');
+                drupal_add_css('/sites/all/libraries/remodal/remodal.css');
+                drupal_add_css('/sites/all/libraries/remodal/remodal-default-theme.css');
+                drupal_add_js($module_path.'/widgets/js/device.settings.form.js');
+
+                $devices = device_query([
+                    'field_owner_id'             => $user->uid,
+                    'include_offline_devices' => false
+
+                ]);
+
+                $vars['devices'] = $devices;
+
+            }
+
+            break;
+
+    }
+
+}
+
+function device_settings_form_submit ($form, &$form_state) {
+    $params = $_REQUEST;
+    $debug = true;
+
+    //we send this down the pipe to a turret
+    //wait for a response
+    //update the turret form defaults
+    //save the node
+    //return the status of our save
+
+    //forward form submission to turret, check for validation errors, pass along to form handler.
+
+
+
+    drupal_json_output([
+        'error' => 'Not Yet Implemented'
+    ]);
+
+}
+
+function device_send_message ($message, &$response) {
+
+    $device_id = $message['device_id'];
+
+    $msg = (object) array(
+        'message'     => $message['message'],
+        'channel'     => $device_id,
+        'messageType' => 'console-input'
+    );
+
+    nodejs_send_message($msg);
 
 }

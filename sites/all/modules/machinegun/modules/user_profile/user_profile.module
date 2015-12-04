@@ -1,0 +1,22 @@
+<?php
+
+//use some user module hooks to add, edit, view, and delete user profile fields..
+//for now, we're only going to support
+
+function user_profile_gateway_mac () {
+
+    return 'Not Yet Implemented';
+
+}
+
+function user_profile_gateway_ip () {
+
+    return 'Not Yet Implemented';
+
+}
+
+function user_profile_device_list () {
+
+    return 'Not Yet Implemented';
+
+}

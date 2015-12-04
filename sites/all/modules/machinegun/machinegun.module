@@ -1,10 +1,12 @@
 <?php
 
-function machinegun_init () {
+function machinegun_init()
+{
 
 }
 
-function machinegun_menu () {
+function machinegun_menu()
+{
 
     $items = [];
 
@@ -18,5 +20,599 @@ function machinegun_menu () {
     ];
 
     return $items;
+
+}
+
+function machinegun_nodejs_message_callback($type)
+{
+
+    switch ($type) {
+        case 'device_scan':
+
+            return [
+                'machinegun_device_scan_user_network'
+            ];
+
+            break;
+
+        case 'device_register':
+
+            return [
+                'machinegun_device_register'
+            ];
+
+            break;
+
+        case 'forms':
+
+            return [
+                'machinegun_device_register_forms'
+            ];
+
+            break;
+
+        case 'structures':
+
+            return [
+                'machinegun_device_register_structures'
+            ];
+
+            break;
+
+        case 'status':
+
+            return [
+                'machinegun_device_update_status'
+            ];
+
+            break;
+
+        case 'claim_devices':
+
+            return [
+                'machinegun_device_claim'
+            ];
+
+            break;
+
+        case 'release_devices':
+
+            return [
+                'machinegun_device_release'
+            ];
+
+            break;
+
+        case 'workspace':
+
+            return [
+                'machinegun_device_workspace_markup'
+            ];
+
+            break;
+
+        case 'console-log':
+
+            return [
+                'machinegun_device_console_log'
+            ];
+
+            break;
+
+        case 'console-input':
+
+            return [
+                'machinegun_device_console_input'
+            ];
+
+            break;
+
+    }
+
+    return null;
+
+}
+
+function machinegun_device_console_input($message, &$response)
+{
+
+    //device_id should be contained in message.
+    device_send_message($message, $response);
+
+    return $response;
+
+}
+
+function machinegun_device_console_log($message, &$response)
+{
+
+    nodejs_send_user_message(
+        $message['uid'],
+        [
+            'type'    => 'console-log',
+            'message' => $message['args']
+        ]
+    );
+
+    $response['event'] = 'console.log';
+
+}
+
+function machinegun_device_scan_user_network($message, &$response)
+{
+
+    //find devices with the same remote_address.
+    //list them with descriptions.
+    //send list as an event to this user.
+
+    $device_ids = db_query(
+        'SELECT entity_id FROM {field_data_field_external_ip} WHERE field_external_ip_value = :remote_address',
+        [':remote_address' => $message['remote_address']]
+    );
+
+    $device_list = [];
+
+    foreach ($device_ids as $delta => $entity_id) {
+
+        $entity_id = $entity_id->entity_id;
+
+        $device_status = db_query(
+            'SELECT field_status_value FROM {field_data_field_status} WHERE entity_id = :entity_id LIMIT 1',
+            [':entity_id' => $entity_id]
+        )->fetchField();
+
+        $device_claimed = db_query(
+            'SELECT field_claimed_value FROM {field_data_field_claimed} WHERE entity_id = :entity_id LIMIT 1',
+            [':entity_id' => $entity_id]
+        )->fetchField();
+
+        $device_id = db_query(
+            'SELECT field_device_id_value FROM {field_data_field_device_id} WHERE entity_id = :entity_id LIMIT 1',
+            [':entity_id' => $entity_id]
+        )->fetchField();
+
+        //$device = node_load($entity_id->entity_id);
+
+        if (!$device_claimed && $device_status > 0) { //$device->field_claimed['und'][0]['value'] == false && $device->field_status['und'][0]['value'] > 0) {
+
+            $device = node_load($entity_id);
+
+            $device_list[$device_id]['id']          = $device_id;
+            $device_list[$device_id]['title']       = $device->title;
+            $device_list[$device_id]['description'] = $device->body['und'][0]['safe_value'];
+
+        }
+
+    }
+
+    nodejs_send_user_message(
+        $message['uid'],
+        [
+            'type'    => 'discovered_devices',
+            'devices' => $device_list
+        ]
+    );
+
+    $response['status'] = 'scan complete';
+
+}
+
+function machinegun_device_update_status($message, &$response)
+{
+
+    //I tried doing a standard drupal node_load node_save on this guy.
+    //what happens is that we end up saving the node while the device edit form is open
+    //when we save after that update, we get an error.
+    //so instead, what we're going to do is inject directly to the database for this node..
+
+    //get the node id for the device with a registered device id.
+    //field_data_field_device_id
+
+    if ($message['status']['code'] == 0) {
+        $debug = 'stop';
+    }
+
+    $entity_id = db_query(
+        'SELECT entity_id FROM {field_data_field_device_id} WHERE field_device_id_value = :device_id LIMIT 1',
+        [':device_id' => $message['device_id']]
+    )->fetchField();
+
+    db_update('field_data_field_status')
+        ->expression('field_status_value', ':status', array(':status' => $message['status']['code']))
+        ->condition('entity_id', $entity_id)
+        ->condition('bundle', 'device')
+        ->execute();
+
+    $device_external_ip = $message['remote_address'];
+
+    db_update('field_data_field_external_ip')
+        ->expression('field_external_ip_value', ':value', array(':value' => $device_external_ip))
+        ->condition('entity_id', $entity_id)
+        ->condition('bundle', 'device')
+        ->execute();
+
+    $response['status'] = $message['status'];
+
+
+}
+
+function machinegun_device_workspace_markup($message, &$response)
+{
+
+    $response = nodejs_auth_check($message);
+
+    $query    = new EntityFieldQuery();
+    $entities = $query->entityCondition('entity_type', 'node')
+        ->propertyCondition('type', 'device')
+        ->fieldCondition('field_device_id', 'value', $message['device_id'], '=')
+        ->execute();
+
+    $workspace_markup_value = !empty($message['markup']) ? $message['markup'] : '';
+
+    if (!empty($entities['node'])) {
+
+        $node = node_load(array_shift(array_keys($entities['node'])));
+
+        $node->field_workspace['und'][0]['value'] = $workspace_markup_value;
+
+        $node = node_submit($node);
+
+        node_save($node);
+
+    } else {
+
+        $response['error'] = ['Device Not Found.'];
+
+    }
+
+}
+
+function machinegun_device_register_forms($message, &$response)
+{
+
+    //our chance to put all of our turret forms on the device content type for later! yay!
+
+    //get device by the provided device id
+
+    $response = nodejs_auth_check($message);
+
+    $query    = new EntityFieldQuery();
+    $entities = $query->entityCondition('entity_type', 'node')
+        ->propertyCondition('type', 'device')
+        ->fieldCondition('field_device_id', 'value', $message['device_id'], '=')
+        ->execute();
+
+    if (!empty($entities['node'])) {
+
+        $settings_form_value = json_encode($message['forms']['settings']);
+
+        $node = node_load(array_shift(array_keys($entities['node'])));
+
+        $node->field_settings_form['und'][0]['value'] = $settings_form_value;
+
+        $node = node_submit($node);
+
+        node_save($node);
+
+    } else {
+
+        $response['error'] = ['Device Not Found.'];
+
+    }
+
+}
+
+function machinegun_device_register_structures($message, &$response)
+{
+
+    //@todo: we need better error reporting for this functionality.  new users wont have any idea why their turrets are failing if their structures configuration is bad.
+
+    $response = nodejs_auth_check($message);
+
+    //$query = new EntityFieldQuery();
+
+    //go through the structures that were passed through the message
+    //check if the structure exists in drupal as a content type already
+    //if not, create the content type
+
+    $types = [];
+
+    foreach ($message['structures'] as $structure_name => $structure_object) {
+
+        $types[] = [
+            'type'        => $structure_name,
+            'name'        => $structure_object['name'],
+            'base'        => 'node_content',
+            //!empty($structure_object['base']) ? $structure_object['base'] : 'node_content',
+            'description' => $structure_object['description'],
+            'custom'      => 1,
+            'modified'    => 1,
+            'locked'      => 0
+        ];
+
+    }
+
+    foreach ($types as $type) {
+
+        $exists = node_type_load($type['type']);
+
+        if (empty($exists)) {
+
+            $type = node_type_set_defaults($type);
+
+            node_type_save($type);
+
+            node_add_body_field($type);
+
+        } else {
+
+            $type = $exists; //because we loaded the type into $exists to check if it exists.
+
+        }
+
+        //add fields to the content type
+        $fields = !empty($structure_object['fields']) ? $structure_object['fields'] : [];
+
+        foreach ($fields as $field_name => $field) {
+
+            $field_type        = $field['#type'];
+            $field_description = !empty($field['#description']) ? $field['#description'] : 'No Description Provided For This Field.';
+            $field_label       = !empty($field['#label']) ? $field['#label'] : 'No Label Provided';
+            $field_widget      = !empty($field['#widget']) ? $field['#widget'] : 'textfield';
+            $field_exists      = field_info_field($field_name);
+
+            if (empty($field_exists)) {
+
+                $field = array(
+                    'field_name' => $field_name,
+                    'type'       => $field_type,
+                );
+
+                $field = field_create_field($field);
+
+            } else {
+
+                $field = $field_exists;
+
+            }
+
+            $instance_exists = field_info_instance('node', $field['field_name'], $type->type);
+
+            if (empty($instance_exists)) {
+
+                $instance = array(
+                    'field_name'  => $field['field_name'],
+                    'entity_type' => 'node',
+                    'bundle'      => $type->type,
+                    'description' => $field_description,
+                    'label'       => $field_label,
+                    'widget'      => [
+                        'type' => $field_widget
+
+                    ]
+
+                );
+
+                field_create_instance($instance);
+
+            } else {
+
+                $instance = $instance_exists;
+
+            }
+
+        }
+
+    }
+
+}
+
+function machinegun_device_register($message, &$response)
+{
+
+    //lookup device by id $message['device_id']
+    //lookup user by device
+    //pair them now
+
+    $response = nodejs_auth_check($message);
+
+    $query    = new EntityFieldQuery();
+    $entities = $query->entityCondition('entity_type', 'node')
+        ->propertyCondition('type', 'device')
+        ->fieldCondition('field_device_id', 'value', $message['device_id'], '=')
+        ->execute();
+
+    if (!empty($entities['node'])) {
+        //found it!
+
+        $node = node_load(array_shift(array_keys($entities['node'])));
+
+    } else {
+        //gotta make one
+
+        $node = new stdClass();
+
+        $node->title = $message['device_name'] ? $node->title = $message['device_name'] : "Registered Device";
+        $node->type  = "device";
+
+        node_object_prepare($node);
+
+        $node->language = LANGUAGE_NONE;
+        $node->promote  = 0;
+        $node->comment  = 0;
+
+        $node->field_claimed = [
+            'und' => [
+                0 => [
+                    'value'      => '0',
+                    'format'     => null,
+                    'safe_value' => $message['device_id']
+                ]
+            ]
+        ];
+
+        $node->field_device_id = [
+            'und' => [
+                0 => [
+                    'value'      => $message['device_id'],
+                    'format'     => null,
+                    'safe_value' => $message['device_id']
+                ]
+            ]
+        ];
+
+    }
+
+    $node->field_gateway_ip = [
+        'und' => [
+            0 => [
+                'value'      => $message['gateway_ip'],
+                'format'     => null,
+                'safe_value' => $message['gateway_ip']
+            ]
+        ]
+    ];
+
+    $node->field_gateway_mac = [
+        'und' => [
+            0 => [
+                'value'      => $message['gateway_mac'],
+                'format'     => null,
+                'safe_value' => $message['gateway_mac']
+            ]
+        ]
+    ];
+
+    $node->field_device_trace_route = [
+        'und' => [
+            0 => [
+                'value'      => 'a.a.a.a',
+                'format'     => null,
+                'safe_value' => 'a.a.a.a'
+
+            ],
+            1 => [
+                'value'      => 'b.b.b.b',
+                'format'     => null,
+                'safe_value' => 'b.b.b.b'
+
+            ],
+            2 => [
+                'value'      => 'c.c.c.c',
+                'format'     => null,
+                'safe_value' => 'c.c.c.c'
+
+            ]
+
+        ]
+
+    ];
+
+
+    $node = node_submit($node);
+
+    node_save($node);
+
+    $message = (object)array(
+        'node'        => $node,
+        'channel'     => $node->field_device_id['und'][0]['value'],
+        'messageType' => 'registered'
+    );
+    nodejs_send_message($message, $node);
+
+    $response['device'] = $node;
+
+
+}
+
+function machinegun_device_claim($message, &$response)
+{
+
+    $device_list = [];
+    $device_ids  = $message['devices'];
+
+    $owner_id = $message['uid'];
+
+    foreach ($device_ids as $device_id) {
+
+        $entity_id = db_query(
+            'SELECT entity_id FROM {field_data_field_device_id} WHERE field_device_id_value = :device_id LIMIT 1',
+            [':device_id' => $device_id]
+        )->fetchField();
+
+        $device = node_load($entity_id);
+
+        $device->field_claimed['und'][0]['value']  = $message['uid'];
+        $device->field_owner_id['und'][0]['value'] = $owner_id;
+
+        node_save($device);
+
+        $message = (object)array(
+            'channel'     => $device_id,
+            'messageType' => 'claimed',
+            'owner'       => $owner_id
+        );
+
+        nodejs_send_message($message);
+
+        $device_list[] = $device;
+    }
+
+    nodejs_send_user_message(
+        $message['uid'],
+        [
+            'type'    => 'claimed_devices',
+            'devices' => $device_list
+        ]
+    );
+
+    $response['status'] = 'claim complete';
+
+}
+
+function machinegun_device_release($message, &$response)
+{
+
+    $device_list = [];
+    $device_ids  = $message['devices'];
+
+    $owner_id = $message['uid'];
+
+    foreach ($device_ids as $device_id) {
+
+        $entity_id = db_query(
+            'SELECT entity_id FROM {field_data_field_device_id} WHERE field_device_id_value = :device_id LIMIT 1',
+            [':device_id' => $device_id]
+        )->fetchField();
+
+        $device = node_load($entity_id);
+
+        $device->field_claimed['und'][0]['value']  = '0';
+        $device->field_owner_id['und'][0]['value'] = null;
+
+        node_save($device);
+
+        //tell the released device that they are orphaned
+        $message = (object)array(
+            'channel'     => $device_id,
+            'messageType' => 'released',
+            'owner'       => $owner_id
+        );
+
+        nodejs_send_message($message);
+
+        $device_list[] = $device;
+    }
+
+    //make sure we send a followup message to our user that their devices have been released.
+    nodejs_send_user_message(
+        $message['uid'],
+        [
+            'type'    => 'released_devices',
+            'devices' => $device_list
+        ]
+    );
+
+    $response['status'] = 'release complete';
 
 }

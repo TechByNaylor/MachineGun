@@ -1,0 +1,99 @@
+<?php
+
+//I don't really like the way this is unfolding... going to try the nodejs module again.
+
+function socketio_menu () {
+
+    $items = [];
+
+    $items['admin/socketio/config'] = [
+        'title'            => 'Socket.io Module Config',
+        'description'      => 'Configure Socket.io Module.',
+        'page callback'    => 'drupal_get_form',
+        'page arguments'   => ['socketio_admin_form'],
+        'access arguments' => ['administer socketio events']
+    ];
+
+    $items['socket/event/create'] = [
+        'title'            => 'Socket.io Event Create Action',
+        'description'      => 'Create and emit a Socket.io event.',
+        'page callback'    => 'socketio_event_create',
+        'access arguments' => []//['create socket.io events']
+    ];
+
+    return $items;
+
+}
+
+function socketio_init ($options = []) {
+
+    $hook_name = '_socketio_events';
+
+    //get all endpoints defined by the endpoints hook
+    $events = _socketio_module_invoke_all($hook_name);
+
+
+}
+
+function socketio_event_create () {
+    global $user;
+
+    $params = $_REQUEST;
+
+    $event_id = $params['event_id'];
+
+    $events = _socketio_module_invoke_all('_socketio_events');
+
+    //check if $event_id is in $events somewhere.
+
+    //if it is, then pass the control on to the event handler associated with it.
+
+    $response = [];
+
+    drupal_json_output($response);
+    exit();
+
+}
+
+/**
+ * Invokes a hook in all enabled modules that implement it.
+ *
+ * All arguments are passed by value. Use drupal_alter() if you need to pass
+ * arguments by reference.
+ *
+ * @param $hook
+ *   The name of the hook to invoke.
+ * @param ...
+ *   Arguments to pass to the hook.
+ *
+ * @return
+ *   An array of return values of the hook implementations. If modules return
+ *   arrays from their implementations, those are merged into one array.
+ *
+ * @see drupal_alter()
+ */
+function _socketio_module_invoke_all($hook) {
+    $args = func_get_args();
+    // Remove $hook from the arguments.
+    unset($args[0]);
+    $return = array();
+    foreach (module_implements($hook) as $module) {
+        $function = $module . '_' . $hook;
+        if (function_exists($function)) {
+            $result = call_user_func_array($function, $args);
+            if (isset($result) && is_array($result)) {
+
+                foreach($result as $entry_key => $entry_value) {
+                    $result[$entry_key]['module_name'] = $module;
+                }
+
+                $return = array_merge_recursive($return, $result);
+            }
+            elseif (isset($result)) {
+                $return[] = $result;
+            }
+        }
+    }
+
+    return $return;
+}

@@ -186,16 +186,36 @@ function nodejs_send_channel_message($channel, $subject, $body) {
  * @param string $subject
  * @param string $body
  */
-function nodejs_send_user_message($uid, $subject, $body) {
-  $message = (object) array(
-    'data' => (object) array(
-      'subject' => $subject,
-      'body' => $body,
-    ),
-    'channel' => 'nodejs_user_' . $uid,
-    'callback' => 'nodejsNotify',
-  );
+function nodejs_send_user_message($uid, $subject = null, $body = null) {
+
+    //modified to make more generic.
+
+    if (empty($subject) && empty($body)) {
+
+        $message = (object) [
+            'data' => (object) []
+        ];
+
+    } else if (!empty($subject) && empty($body)) {
+
+        $message = (object) [
+            'data' => (object) $subject
+        ];
+
+    } else {
+        $message = (object) [
+            'data' => (object) array(
+                    'subject' => $subject,
+                    'body' => $body,
+                )
+        ];
+    }
+
+    $message->channel = 'nodejs_user_' . $uid;
+
+
   nodejs_enqueue_message($message);
+
 }
 
 /**
@@ -546,8 +566,23 @@ function nodejs_message_handler() {
       $handlers = array();
       foreach (module_implements('nodejs_message_callback') as $module) {
         $function = $module . '_nodejs_message_callback';
-        if (is_array($function($message['messageType']))) {
-          $handlers += $function($message['messageType']);
+
+        if (!empty($message['messageType'])) {
+
+            $type = $message['messageType'];
+
+        } else if (!empty($message['type'])){
+
+            $type = $message['type'];
+
+        } else {
+
+            $type = null;
+
+        }
+
+        if (is_array($function($type))) {
+          $handlers += $function($type);
         }
       }
       foreach ($handlers as $callback) {

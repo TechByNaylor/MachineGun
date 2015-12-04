@@ -115,3 +115,116 @@ function github_project_is_version_controlled () {
     return $branch ? true : false;
 
 }
+
+function github_form_alter(&$form, $form_state, $form_id)  {
+    switch ($form_id)  {
+
+        case 'update_manager_install_form':
+            //this is the module/theme installation form.
+            $form['information2'] = [
+                '#prefix' => '<strong>',
+                '#markup' => t('Or'),
+                '#suffix' => '</strong>'
+            ];
+
+            $form['project_github_url'] = [
+                '#type' => 'textfield',
+                '#title' => t('Install from a Git Repository'),
+                '#description' => t('For example: %url', ['%url' => 'https://github.com/TechByNaylor/EasyRest.git']),
+            ];
+
+            $form['#validate'][] = 'github_form_validate_alter';
+
+            array_unshift($form['#submit'], 'github_form_submit_alter');
+
+            break;
+
+    }
+
+}
+
+function github_form_validate_alter ($form, &$form_state) {
+    $form_id = $form['#form_id'];
+
+    switch ($form_id) {
+
+        case 'update_manager_install_form':
+
+            //check to see if project_github_url is set
+            //if it is set, form_clear_errors() and proceed to the modified submit functionality
+
+            if ($form_state['values']['project_github_url']) {
+
+                //since we know the user is trying to install from a github url, clear other install validation errors and error messages
+                $messages = drupal_get_messages('error');
+                foreach($messages['error'] as $message) {
+
+                    $errors = form_get_errors();
+                    form_clear_error();
+
+                    foreach ($errors as $elementName => $errorMessage) {
+
+                        switch ($message) {
+                            case 'You must either provide a URL or upload an archive file to install.':
+                            case 'The provided URL is invalid.':
+                                break;
+
+                            default:
+                                drupal_set_message($message, 'error');
+                                form_set_error($elementName, $errorMessage);
+
+                        }
+
+                    }
+
+                }
+
+                //validate that the url provided is indeed a url
+                if (!valid_url($form_state['values']['project_github_url'], TRUE)) {
+
+                    form_set_error('project_github_url', 'Git repository url invalid');
+
+                }
+
+                if (false/*other conditions*/) {
+
+                    form_set_error('project_github_url', t('Provided github project url is not a drupal module, theme, or is not a valid github repository.'));
+
+                }
+
+                //@todo: do some queries on the github url to determine if this is a module or a theme.
+
+            }
+
+            break;
+
+    }
+
+}
+
+function github_form_submit_alter ($form, &$form_state) {
+    $form_id = $form['#form_id'];
+
+    switch ($form_id) {
+
+        case 'update_manager_install_form':
+            //we're going to take the project_github_url field
+            //then we're going to clone the repo into our sites/all/modules folder using the credentials we've previously added to our github module
+
+            //clone the repo
+            //compress the cloned repo folder
+            //make compressed archive available as though the user uploaded the file from the drupal module upload form
+                //set the $_FILES['files']['name']['project_upload'] variable before continuing.
+
+            //business as usual. :)
+            drupal_set_message('todo: github_form_submit_alter','error');
+
+            return;
+
+            break;
+
+
+
+    }
+
+}
