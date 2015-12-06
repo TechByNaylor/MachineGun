@@ -146,7 +146,7 @@ function machinegun_device_scan_user_network($message, &$response)
     $message['remote_address'] = $_SERVER['REMOTE_ADDR'];
 
     $device_ids = db_query(
-        'SELECT entity_id FROM {field_data_field_external_ip} WHERE field_external_ip_value = :remote_address',
+        'SELECT entity_id FROM {field_data_field_gateway_ip} WHERE field_gateway_ip_value = :remote_address',
         [':remote_address' => $message['remote_address']]
     );
 
