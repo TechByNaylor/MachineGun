@@ -140,10 +140,10 @@ function machinegun_device_console_log($message, &$response)
 
 function machinegun_device_scan_user_network($message, &$response)
 {
-
     //find devices with the same remote_address.
     //list them with descriptions.
     //send list as an event to this user.
+    $message['remote_address'] = $_SERVER['REMOTE_ADDR'];
 
     $device_ids = db_query(
         'SELECT entity_id FROM {field_data_field_external_ip} WHERE field_external_ip_value = :remote_address',

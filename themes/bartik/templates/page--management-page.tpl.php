@@ -1,6 +1,12 @@
 <?php
 
-
+    $accordion_items = array_map(function ($device) {
+            return [
+                'label'   => $device->title,
+                'id'      => $device->field_device_id['und'][0]['value'],
+                'content' => theme_render_template(path_to_theme().'/templates/widget--device-details.tpl.php', ['device' => $device])
+            ];
+        }, $devices);
 
 ?>
 
@@ -22,42 +28,15 @@
                 <div id="management-content">
 
                     <div class="device-section">
+
                         <?= theme_render_template(
+
                             path_to_theme() . '/templates/widget--accordion.tpl.php',
                             [
-                                'items' => array_map(function ($device) {
-                                    return [
-                                        'label'   => $device->title,
-                                        'id'      => $device->field_device_id['und'][0]['value'],
-                                        'content' => theme_render_template(path_to_theme().'/templates/widget--device-details.tpl.php', ['device' => $device])
-                                    ];
-                                }, $devices)
+                                'items' => $accordion_items,
+                                'footer' => '<div class="scan-for-device action button">Scan For Devices</div>'
                             ]
                         ); ?>
-
-                        <?= '' /*theme_render_template(
-                            path_to_theme() . '/templates/widget--accordion.tpl.php',
-                            [
-                                'items' => [
-                                    [
-                                        'label' => 'item1',
-                                        'content' => 'content 1'
-                                    ], [
-                                        'label' => 'item2',
-                                        'content' => 'content 2'
-                                    ], [
-                                        'label' => 'item3',
-                                        'content' => 'content 3'
-                                    ], [
-                                        'label' => 'item4',
-                                        'content' => 'content 4'
-                                    ], [
-                                        'label' => 'item5',
-                                        'content' => 'content 5'
-                                    ]
-                                ]
-                            ]
-                        )*/ ?>
 
                     </div>
 

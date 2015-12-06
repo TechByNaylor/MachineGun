@@ -18,6 +18,8 @@
 
     <?php } ?>
 
+    <?= $footer ?>
+
 </div>
 
 <script>

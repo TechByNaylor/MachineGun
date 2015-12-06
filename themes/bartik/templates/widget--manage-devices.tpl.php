@@ -33,7 +33,7 @@
 
 <!-- Modals -->
 
-<div data-remodal-id="device_scan_modal">
+<div class="device-scan-modal" data-remodal-id="device_scan_modal">
 
     <button data-remodal-action="close" class="remodal-close"></button>
 

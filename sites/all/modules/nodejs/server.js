@@ -1154,7 +1154,7 @@ var setContentToken = function (request, response) {
  * Setup a sockets{}.connection with uid, channels etc.
  */
 var setupClientConnection = function (sessionId, authData, contentTokens) {
-    console.log(sockets);
+    //console.log(sockets);
     if (!sockets[sessionId]) {
         console.log("Client socket '" + sessionId + "' went away.");
         //console.log(authData);
@@ -1335,7 +1335,7 @@ io.on('connection', function (socket) {
             } else {
                 console.log('forwarding to system for processing');
 
-                //message['uid'] = (this.uid) ? this.uid : 0;
+                message['uid'] = (socket.uid) ? socket.uid : (this.uid) ? this.uid : 0;
                 message['remote_address'] = message['device_ip'] || ''
 
                 sendMessageToBackend(message, genericMessageHandlerCallback);
