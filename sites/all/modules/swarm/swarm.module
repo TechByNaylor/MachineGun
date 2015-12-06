@@ -1,0 +1,36 @@
+<?php
+
+function swarm_init () {
+    //we check on the status of our connection here.
+    //if we're not connected, tell our node process to establish a connection with our swarm server eh?
+    //you must administer the connection settings from swarm's admin form.
+    //the remote server must be configured to allow swarm node connections
+    //if everything is configured right, this server will maintain an open connection with a remote server.
+    //as long as that connection remains open, we will receive swarm messages emitted from the host server.
+    //the host does not process child messages from connected machines, this is a delegation pattern.
+    //but we can interact with the host machine in other ways.  This is just our heartbeat.
+
+    //you must have nodejs integration module installed for this to work.
+    //we take advantage of a lot of those features.
+
+    //we tell our node server to establish a passive connection to the host machine.
+    //it reports to us when events come in from the outside,
+    //we pass those events along to any module who might be listening through a hook_swarm_events definition.
+
+    //don't forget, this machine can be a parent node too! =)
+
+}
+
+function swarm_on_message () {
+    //look at how the nodejs module processes callbacks for this.
+}
+
+function swarm_menu () {
+
+    $items = [];
+
+
+
+    return $items;
+
+}

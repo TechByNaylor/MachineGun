@@ -33,10 +33,50 @@ function github_webhook_on_push ($params) {
     $response = ['status' => 'OK'];
 
     if (variable_get('github_auto_pull', false)) {
-        $response = github_pull();
+        $response = github_reset();//github_pull();
     }
 
     return $response;
+
+}
+
+function github_reset ($options = []) {
+
+    $repoUrl       = variable_get('github_repo_url');
+    $adminUsername = variable_get('github_admin_username');
+    $adminPassword = variable_get('github_admin_password');
+
+    if (empty($repoUrl) || empty($adminUsername) || empty($adminPassword)) {
+
+        return 'You Must Provide repository url, username, and password in your <a href="/admin/github/config">Github Configuration Form</a>';
+
+    }
+
+    $result = [];
+    $return = 0;
+
+    $repoUrlTokens = explode('://', $repoUrl);
+    $modifiedRepoUrl = $repoUrlTokens[0].'://'."{$adminUsername}:{$adminPassword}@".$repoUrlTokens[1];
+
+    //git fetch origin master
+    //git reset --hard FETCH_HEAD
+    //git clean -df
+
+    $results = [];
+
+    exec("git fetch origin master", $result, $return);
+
+    $results[] = $result;
+
+    exec("git reset --hard FETCH_HEAD", $result, $return);
+
+    $results[] = $result;
+
+    exec("git clean -df", $result, $return);
+
+    $results[] = $result;
+
+    return $results;
 
 }
 

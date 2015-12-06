@@ -1,0 +1,7 @@
+name = Swarm
+description = Distributed Events For Drupal
+package = Swarm
+version = 0.0.1
+core = 7.x
+files[] = swarm.admin.inc
+configure = admin/swarm/config
