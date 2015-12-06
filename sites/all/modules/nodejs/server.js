@@ -63,6 +63,7 @@ var channels = {},
     extensions = [];
 
 var configFile = process.cwd() + '/nodejs.config.js';
+
 if (process.argv[2]) {
     configFile = process.argv[2];
 }
@@ -1335,7 +1336,7 @@ io.on('connection', function (socket) {
                 console.log('forwarding to system for processing');
 
                 //message['uid'] = (this.uid) ? this.uid : 0;
-                message['remote_address'] = this.client.conn.remoteAddress
+                message['remote_address'] = message['device_ip'] || ''
 
                 sendMessageToBackend(message, genericMessageHandlerCallback);
             }

@@ -1,5 +1,31 @@
 <?php
 
+function network_menu () {
+
+    $items = [];
+
+    $items['network/echo/ip'] = [
+        'title'            => 'Network return client ip',
+        'description'      => 'Endpoint is used to tell a remote connection what their external ip address is.',
+        'page callback'    => 'network_echo_ip',
+        'access arguments' => ['access content']
+    ];
+
+    return $items;
+
+}
+
+function network_echo_ip () {
+
+    //get remote ip
+    $ip = $_SERVER['REMOTE_ADDR'];
+    //dump the ip address into a json response
+    drupal_json_output($ip);
+    drupal_exit();
+    return $ip;
+
+}
+
 function network_trace_route ($ip) {
     $unix      =  1;
     $windows   =  0;

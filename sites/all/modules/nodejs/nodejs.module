@@ -1,5 +1,43 @@
 <?php
 
+function nodejs_on_code_change ($response) {
+    //@TODO: exec is blocking even with nohup, not sure why.
+    //Ryan suggests that I launch a screen process from a script that we call instead.
+    return $response;
+    //@TODO: hook into the nodejs service shutdown message hook here,
+    //to tell any interested module that our server is going down right now.
+
+    //kill the server if it is running
+    exec("ps -ax|grep server.js", $result, $return);
+
+    $pids = array_map(function ($line) {
+
+        return explode(' ', $line)[0];
+
+    }, $result);
+
+    foreach ($pids as $delta => $pid) {
+
+        exec("kill {$pid}", $result, $return);
+
+    }
+
+    //the server process should now be done.
+    //its time to start it up again
+    $pwd = exec("pwd", $pwd_result, $pwd_return);
+
+    $startup_value = exec("cd {$pwd}/sites/all/modules/nodejs; nohup /usr/local/bin/node server.js &");
+
+    $debug = true;
+
+    //then start the node server again
+    //@TODO: hook into the nodejs service started message hook here.
+    //to tell any interested modules that our server is now back online
+
+    return $response;
+
+}
+
 /**
  * Generate a token for a piece of content.
  */
