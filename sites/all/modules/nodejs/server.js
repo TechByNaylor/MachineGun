@@ -1335,7 +1335,7 @@ io.on('connection', function (socket) {
             } else {
                 console.log('forwarding to system for processing');
 
-                message['uid'] = (socket.uid) ? socket.uid : (this.uid) ? this.uid : 0;
+                message['uid'] = (socket.uid) ? socket.uid : (this.uid) ? this.uid : (message.uid) ? message.uid : 0;
                 message['remote_address'] = message['device_ip'] || socket.conn.remoteAddress;
 
                 sendMessageToBackend(message, genericMessageHandlerCallback);
