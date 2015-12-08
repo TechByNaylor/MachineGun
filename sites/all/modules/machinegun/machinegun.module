@@ -107,9 +107,54 @@ function machinegun_nodejs_message_callback($type)
 
             break;
 
+        case 'get_jobs':
+
+            return [
+                'machinegun_jobs_find'
+            ];
+
+            break;
     }
 
     return null;
+
+}
+
+function machinegun_jobs_find ($message, &$response) {
+    //all we do here is get a list of jobs that belong to the current user, and return their id, title, and description.
+
+    $owner_id = $message['uid'];
+
+    $job_ids = db_query(
+        'SELECT entity_id FROM {field_data_field_owner_id} WHERE field_owner_id_value = :owner_id AND bundle = :bundle',
+        [
+            ':owner_id' => $owner_id,
+            ':bundle'   => 'job'
+        ]
+    );
+
+    $jobs = [];
+
+    foreach ($job_ids as $delta => $job_results) {
+        $job_id = $job_results->entity_id;
+
+        $job = node_load($job_id);
+
+        //@todo: organize jobs in an associative array (indexed by entity_id), so that we can include nested child jobs without worrying about circular structures at the client side.
+
+        $jobs[] = $job;
+
+    }
+
+    nodejs_send_user_message(
+        $message['uid'],
+        [
+            'type'    => 'saved_jobs',
+            'jobs' => $jobs
+        ]
+    );
+
+    $response['status'] = 'job search complete';
 
 }
 
